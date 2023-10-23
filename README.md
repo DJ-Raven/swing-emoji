@@ -1,9 +1,9 @@
 # Swing Emoji
 Java Swing project that allows you to display emojis within a `JTextPane` using SVG icons in your Java applications. It leverages the power of the Java Swing library, FlatLaf and JSVG for rendering scalable vector graphics.
 
-<img src="https://github.com/DJ-Raven/swing-emoji/assets/58245926/8aebb003-7ba2-4b4d-98ba-66a87bffc508" alt="sample dark" width="400"/>
+<img src="https://github.com/DJ-Raven/swing-emoji/assets/58245926/f459d01d-b74a-41d7-9b28-2c83b5246a31" alt="sample dark" width="400"/>
 &nbsp;
-<img src="https://github.com/DJ-Raven/swing-emoji/assets/58245926/b57e6bdf-4ea7-43e9-92a4-a678749e1d8a" alt="sample light" width="400"/>
+<img src="https://github.com/DJ-Raven/swing-emoji/assets/58245926/fc545b8c-682e-47f7-81aa-69ce2434ab42" alt="sample light" width="400"/>
 
 ## Features
 
