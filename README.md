@@ -14,6 +14,7 @@ Java Swing project that allows you to display emojis within a `JTextPane` using 
 
 - [FlatLaf](https://github.com/JFormDesigner/FlatLaf): A modern, open-source look and feel for Swing applications.
 - [JSVG](https://github.com/weisJ/jsvg): A library for working with SVG (Scalable Vector Graphics) in Java.
+- [JSON](https://github.com/stleary/JSON-java) Parse json to java object.
 - [Microsoft Fluent UI Emoji](https://github.com/microsoft/FluentUI-Emoji): A collection of emojis provided by Microsoft.
 
 ## Example
