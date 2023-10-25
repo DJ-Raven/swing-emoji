@@ -80,6 +80,7 @@ public class EmojiPanelChooser extends JPanel {
                 textPane.getDocument().remove(start, text.length());
             }
             textPane.getDocument().insertString(start, data.getEmoji(), null);
+            System.out.println(data.getUnicode()+" "+data.getEmoji());
         } catch (BadLocationException e) {
             System.err.println(e);
         }
