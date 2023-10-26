@@ -27,7 +27,29 @@ public class EmojiExtractor {
     }
 
     public boolean isEmoji(String str) {
-        return str.codePoints().anyMatch(codePoint -> Character.getType(codePoint) == Character.OTHER_SYMBOL);
+        return str.codePoints().anyMatch(codePoint -> {
+            int type = Character.getType(codePoint);
+            return type == Character.OTHER_SYMBOL ||
+                    type == Character.OTHER_PUNCTUATION ||
+                    type == Character.MATH_SYMBOL ||
+                    (codePoint >= 0x1F600 && codePoint <= 0x1F64F) || // Common Emoticons
+                    (codePoint >= 0x1F300 && codePoint <= 0x1F5FF) || // Miscellaneous Symbols and Pictographs
+                    (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) || // Transport and Map Symbols
+                    (codePoint >= 0x1F700 && codePoint <= 0x1F77F) || // Alchemical Symbols
+                    (codePoint >= 0x1F780 && codePoint <= 0x1F7FF) || // Geometric Shapes Extended
+                    (codePoint >= 0x1F800 && codePoint <= 0x1F8FF) || // Supplemental Arrows-C
+                    (codePoint >= 0x1F900 && codePoint <= 0x1F9FF) || // Supplemental Symbols and Pictographs
+                    (codePoint >= 0x1FA00 && codePoint <= 0x1FA6F) || // Chess Symbols
+                    (codePoint >= 0x1FA70 && codePoint <= 0x1FAFF) || // Symbols and Pictographs Extended-A
+                    (codePoint >= 0x1F004 && codePoint <= 0x1F0CF) || // Miscellaneous Symbols and Arrows
+                    (codePoint >= 0x1F200 && codePoint <= 0x1F251) || // Enclosed Ideographic Supplement
+                    isExcludedCharacter(type);
+        });
+    }
+
+    private boolean isExcludedCharacter(int codePoint) {
+        // Define the code points of characters you want to exclude
+        return false;
     }
 
     public class EmojiInfo {

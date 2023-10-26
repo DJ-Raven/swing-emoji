@@ -21,7 +21,7 @@ public class EmojiPanelChooser extends JPanel {
 
     private void init() {
         setLayout(new MigLayout("fill", "fill"));
-        panel = new JPanel(new MigLayout("insets 0 0 0 9,wrap 9,gap 4"));
+        panel = new JPanel(new MigLayout("insets 0 0 0 10,wrap 9,gap 4"));
         List<GroupData> group = EmojiIcon.getInstance().getGroups();
         JToolBar toolBar = new JToolBar();
         ButtonGroup buttonGroup = new ButtonGroup();
@@ -80,7 +80,6 @@ public class EmojiPanelChooser extends JPanel {
                 textPane.getDocument().remove(start, text.length());
             }
             textPane.getDocument().insertString(start, data.getEmoji(), null);
-            System.out.println(data.getUnicode()+" "+data.getEmoji());
         } catch (BadLocationException e) {
             System.err.println(e);
         }

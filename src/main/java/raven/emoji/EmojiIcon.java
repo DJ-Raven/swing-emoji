@@ -67,7 +67,6 @@ public class EmojiIcon {
         return new FlatSVGIcon("raven/emoji/" + svg, scale);
     }
 
-
     public void installTextPane(JTextPane textPane) {
         StyledDocument styledDocument = new DefaultStyledDocument() {
             @Override
