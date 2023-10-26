@@ -8,7 +8,7 @@ Java Swing project that allows you to display emojis within a `JTextPane` using 
 ## Features
 
 - Display emojis within a `JTextPane` in your Java Swing applications.
-- Supports a collection of 1,514 emoji icons. [here](https://github.com/DJ-Raven/swing-emoji/blob/main/src/main/resources/raven/emoji/metadata.json)
+- Supports a collection of 1,346 emoji icons. [here](https://github.com/DJ-Raven/swing-emoji/blob/main/src/main/resources/raven/emoji/metadata.json)
 
 ## Dependencies and resources use in this project
 
