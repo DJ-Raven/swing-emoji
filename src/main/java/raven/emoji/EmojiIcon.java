@@ -109,12 +109,14 @@ public class EmojiIcon {
     public List<EmojiData> filterByGroup(String group) {
         return emojiMap.values().stream()
                 .filter(data -> group.equals(data.getGroup()))
+                .sorted(Comparator.comparing(EmojiData::getUnicode).reversed())
                 .collect(Collectors.toList());
     }
 
     public List<EmojiData> filterByKeywords(String keyword) {
         return emojiMap.values().stream()
                 .filter(data -> containsKeyword(data, keyword))
+                .sorted(Comparator.comparing(EmojiData::getUnicode).reversed())
                 .collect(Collectors.toList());
     }
 
