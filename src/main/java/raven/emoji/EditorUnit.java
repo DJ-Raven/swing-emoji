@@ -11,6 +11,7 @@ public class EditorUnit {
 
     public static UndoManager installUndoManager(JTextComponent text) {
         UndoManager undoManager = new UndoManager();
+        
         Action undoAction = new AbstractAction("Undo") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -19,6 +20,7 @@ public class EditorUnit {
                 }
             }
         };
+
         Action redoAction = new AbstractAction("Redo") {
             @Override
             public void actionPerformed(ActionEvent e) {
