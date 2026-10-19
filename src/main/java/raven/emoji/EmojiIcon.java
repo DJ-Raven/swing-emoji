@@ -8,7 +8,6 @@ import raven.emoji.data.EmojiData;
 import raven.emoji.data.GroupData;
 
 import javax.swing.*;
-import javax.swing.text.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,7 +17,7 @@ public class EmojiIcon {
 
     private Map<String, EmojiData> emojiMap;
 
-    public static EmojiIcon getInstance() {
+    public static synchronized EmojiIcon getInstance() {
         if (instance == null) {
             instance = new EmojiIcon();
         }
@@ -26,10 +25,7 @@ public class EmojiIcon {
     }
 
     public void installEmojiSvg() {
-        if (emojiMap != null) {
-            emojiMap.clear();
-        }
-        emojiMap = new HashMap<>();
+        Map<String, EmojiData> emojiMap = new LinkedHashMap<>();
         JSONTokener jsonTokener = new JSONTokener(getClass().getResourceAsStream("/raven/emoji/metadata.json"));
         JSONArray json = new JSONArray(jsonTokener);
         for (int i = 0; i < json.length(); i++) {
@@ -37,6 +33,22 @@ public class EmojiIcon {
             EmojiData data = new EmojiData(obj.getString("file"), obj.getString("emoji"), toArray(obj.getJSONArray("keywords")), obj.getString("unicode"), obj.getString("group"));
             emojiMap.put(obj.getString("emoji"), data);
         }
+        this.emojiMap = emojiMap;
+    }
+
+    private Map<String, EmojiData> getEmojiMap() {
+        if (emojiMap == null) {
+            installEmojiSvg();
+        }
+        return emojiMap;
+    }
+
+    public EmojiData getEmojiData(String emoji) {
+        return getEmojiMap().get(emoji);
+    }
+
+    public boolean isEmoji(String emoji) {
+        return getEmojiMap().containsKey(emoji);
     }
 
     private String[] toArray(JSONArray array) {
@@ -52,44 +64,23 @@ public class EmojiIcon {
     }
 
     public Icon getEmojiIcon(String key, float scale) {
-        if (emojiMap == null) {
-            return null;
-        }
-
-        EmojiData data = emojiMap.get(key);
+        EmojiData data = getEmojiMap().get(key);
         if (data == null) {
             return null;
         }
-        String svg = data.getGroup() + "/flat/" + data.getFile();
-        if (svg == null) {
-            return null;
-        }
-        return new FlatSVGIcon("raven/emoji/" + svg, scale);
+        return new FlatSVGIcon("raven/emoji/" + data.getGroup() + "/flat/" + data.getFile(), scale);
     }
 
+    /**
+     * Install an {@link EmojiDocument} to the text pane, the current text is kept.
+     * Call this after {@link JTextPane#setEditorKit}, because setting the editor kit replaces the document.
+     */
     public void installTextPane(JTextPane textPane) {
-        StyledDocument styledDocument = new DefaultStyledDocument() {
-            @Override
-            public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
-                super.insertString(offs, str, a);
-                EmojiExtractor emojiExtractor = new EmojiExtractor();
-                List<EmojiExtractor.EmojiInfo> list = emojiExtractor.extractEmojis(str);
-                for (EmojiExtractor.EmojiInfo e : list) {
-                    Icon icon = EmojiIcon.getInstance().getEmojiIcon(e.getEmoji());
-                    if (icon != null) {
-                        Style style = super.addStyle("emoji", null);
-                        StyleConstants.setIcon(style, icon);
-                        try {
-                            super.remove(offs + e.getStartIndex(), e.getLength());
-                            super.insertString(offs + e.getStartIndex(), e.getEmoji(), style);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                }
-            }
-        };
-        textPane.setDocument(styledDocument);
+        String text = textPane.getText();
+        textPane.setDocument(new EmojiDocument());
+        if (text != null && !text.isEmpty()) {
+            textPane.setText(text);
+        }
     }
 
     public List<GroupData> getGroups() {
@@ -107,22 +98,26 @@ public class EmojiIcon {
     }
 
     public List<EmojiData> filterByGroup(String group) {
-        return emojiMap.values().stream()
+        return getEmojiMap().values().stream()
                 .filter(data -> group.equals(data.getGroup()))
                 .sorted(Comparator.comparing(EmojiData::getUnicode).reversed())
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Search emoji by keyword, case-insensitive and partial match
+     */
     public List<EmojiData> filterByKeywords(String keyword) {
-        return emojiMap.values().stream()
-                .filter(data -> containsKeyword(data, keyword))
+        String search = keyword.trim().toLowerCase(Locale.ROOT);
+        return getEmojiMap().values().stream()
+                .filter(data -> containsKeyword(data, search))
                 .sorted(Comparator.comparing(EmojiData::getUnicode).reversed())
                 .collect(Collectors.toList());
     }
 
     private boolean containsKeyword(EmojiData data, String targetKeyword) {
         for (String keyword : data.getKeywords()) {
-            if (targetKeyword.equals(keyword)) {
+            if (keyword.toLowerCase(Locale.ROOT).contains(targetKeyword)) {
                 return true;
             }
         }

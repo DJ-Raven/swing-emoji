@@ -21,18 +21,37 @@ Java Swing project that allows you to display emojis within a `JTextPane` using 
 ## Example
 
 ``` java
-//  install emoji svg (one time use)
+//  install emoji svg (one time use, it is also loaded automatically on first use)
 EmojiIcon.getInstance().installEmojiSvg();
 
 //  create jtextpane with wrap text
 JTextPane text = new JTextPane();
-text.setEditorKit(new AutoWrapText(text));
+text.setEditorKit(new AutoWrapText());
 
-// install this jtextpane to use emoji
+// install this jtextpane to use emoji (call it after setEditorKit, because setEditorKit replaces the document)
 EmojiIcon.getInstance().installTextPane(text);
-```
-<br/>
 
-> **Warning**
-> This project still have errors, and we need your help to fix them. Please contribute to error identification and resolution.
-> Feel free to open an issue or submit a pull request. We welcome any assistance and feedback! [issues](https://github.com/DJ-Raven/swing-emoji/issues)
+// optional: ctrl+z / ctrl+y undo and redo
+EditorUnit.installUndoManager(text);
+
+// optional: emoji chooser panel, click an emoji to insert it at the caret
+EmojiPanelChooser chooser = new EmojiPanelChooser();
+chooser.setTextPane(text);
+```
+
+Any supported emoji typed, pasted or set with `setText` is shown as an icon. See the full demo in [Test.java](src/test/java/test/Test.java).
+
+## How it works
+
+- `EmojiDocument` stores every emoji (with its optional `U+FE0F` variation selector) in its own icon element.
+  Removing part of an emoji removes the whole emoji, a surrogate pair sent in two parts (for example by the Windows emoji panel) is joined,
+  and one insert or replace is undone in one step.
+- `AutoWrapText` wraps lines between emojis, also when there is no space between them,
+  moves the caret over a whole emoji and paints the selection with the same height for text and emoji.
+- `EmojiPanelChooser` lists the emojis by group and can search them by keyword.
+
+## Build and test
+
+``` shell
+mvn test
+```

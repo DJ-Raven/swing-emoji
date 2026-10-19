@@ -5,20 +5,24 @@ import com.formdev.flatlaf.util.UIScale;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 
 public class AutoWrapText extends StyledEditorKit {
 
     private final int space;
-    private JTextPane textPane;
 
+    /**
+     * The text pane is no longer required, the views use their own container
+     */
     public AutoWrapText(JTextPane textPane) {
         this(textPane, 0);
     }
 
     public AutoWrapText(JTextPane textPane, int space) {
-        this.textPane = textPane;
         this.space = space;
+    }
+
+    public AutoWrapText() {
+        this(null, 0);
     }
 
     @Override
@@ -65,43 +69,37 @@ public class AutoWrapText extends StyledEditorKit {
         }
 
         @Override
-        public int getNextVisualPositionFrom(int pos, Position.Bias b, Shape a, int direction, Position.Bias[] biasRet) throws BadLocationException {
-            int next = super.getNextVisualPositionFrom(pos, b, a, direction, biasRet);
-            if (direction == SwingConstants.WEST && (pos == -1 || pos > getStartOffset())) {
-                //  Still have issues when press arrow key to move cursor back
-                return getStartOffset();
+        public int getBreakWeight(int axis, float pos, float len) {
+            if (axis == X_AXIS) {
+                //  Allow the line to wrap after any emoji, also between emojis without space
+                return len >= getPreferredSpan(axis) ? ExcellentBreakWeight : BadBreakWeight;
             }
-            if (direction == SwingConstants.EAST && pos != -1) {
-                return getEndOffset();
-            }
-            return next;
-        }
-
-        private boolean isSelected() {
-            int start = textPane.getSelectionStart();
-            int end = textPane.getSelectionEnd();
-            if (start == end) {
-                return false;
-            }
-            if (start <= getStartOffset() && end >= getEndOffset()) {
-                return true;
-            }
-            return false;
+            return super.getBreakWeight(axis, pos, len);
         }
 
         @Override
-        public void paint(Graphics g, Shape a) {
-            if (isSelected()) {
-                //  For test not yet fix
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(textPane.getSelectionColor());
-                Rectangle2D rectangle = a.getBounds2D();
-                float y = UIScale.scale(0.8f);
-                float h = UIScale.scale(1.4f);
-                g2.fill(new Rectangle2D.Double(rectangle.getX(), rectangle.getY() + y, rectangle.getWidth(), rectangle.getHeight() - h));
-                g2.dispose();
+        public int getNextVisualPositionFrom(int pos, Position.Bias b, Shape a, int direction, Position.Bias[] biasRet) throws BadLocationException {
+            //  An emoji is two or more chars, so move over the whole emoji instead of one char
+            int start = getStartOffset();
+            int end = getEndOffset();
+            if (direction == SwingConstants.WEST) {
+                biasRet[0] = Position.Bias.Forward;
+                if (pos == -1 || pos > start) {
+                    return start;
+                }
+                return -1;
             }
-            super.paint(g, a);
+            if (direction == SwingConstants.EAST) {
+                biasRet[0] = Position.Bias.Forward;
+                if (pos == -1) {
+                    return start;
+                }
+                if (pos < end) {
+                    return end;
+                }
+                return -1;
+            }
+            return super.getNextVisualPositionFrom(pos, b, a, direction, biasRet);
         }
     }
 
@@ -109,6 +107,42 @@ public class AutoWrapText extends StyledEditorKit {
 
         public CustomParagraphView(Element elem) {
             super(elem);
+            //  The document becomes i18n once it contains emoji (surrogate pairs), and the i18n TextLayoutStrategy
+            //  breaks the line after almost every icon. The default flow strategy wraps icons properly
+            strategy = new FlowStrategy();
+        }
+
+        @Override
+        protected void paintChild(Graphics g, Rectangle alloc, int index) {
+            paintSelection(g, alloc, getView(index));
+            super.paintChild(g, alloc, index);
+        }
+
+        /**
+         * Paint the selection with the full row height, so text and emoji get the same selection height
+         */
+        private void paintSelection(Graphics g, Rectangle alloc, View row) {
+            Container container = getContainer();
+            if (!(container instanceof JTextComponent)) {
+                return;
+            }
+            JTextComponent text = (JTextComponent) container;
+            Caret caret = text.getCaret();
+            if (caret == null || !caret.isSelectionVisible() || text.getSelectionColor() == null) {
+                return;
+            }
+            int start = Math.max(text.getSelectionStart(), row.getStartOffset());
+            int end = Math.min(text.getSelectionEnd(), row.getEndOffset());
+            if (start >= end) {
+                return;
+            }
+            try {
+                Rectangle rec = row.modelToView(start, Position.Bias.Forward, end, Position.Bias.Backward, alloc).getBounds();
+                g.setColor(text.getSelectionColor());
+                g.fillRect(rec.x, alloc.y, rec.width, alloc.height);
+            } catch (BadLocationException e) {
+                //  Nothing to paint
+            }
         }
 
         @Override
